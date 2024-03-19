@@ -4,6 +4,8 @@ import * as Yup from 'yup';
 import { TextField, Button, FormControl, InputLabel, Select, MenuItem, FormHelperText,  Box, Typography, Container } from '@mui/material';
 import RegisterImage from '../../resources/images/register.jpg';
 import { Link } from 'react-router-dom';
+import { authedRequest } from '../../http';
+import toast from 'react-hot-toast';
 interface FormValues {
     username: string;
     email: string;
@@ -34,8 +36,20 @@ const validationSchema = Yup.object({
 });
 
 const RegisterPage: React.FC = () => {
-    const handleSubmit = (values: FormValues, { setSubmitting }: FormikHelpers<FormValues>) => {
-        console.log(values);
+    const handleSubmit = async (values: FormValues, { setSubmitting }: FormikHelpers<FormValues>) => {
+        try {
+            await authedRequest.post(`/auth/register`, {
+                username: values.username,
+                email: values.email,
+                password: values.password,
+                userType: values.role.toUpperCase(),
+                registrationCode: values.registerCode
+            });   
+            toast.success('Account created successfully');
+        } catch (error:any) {
+            console.log(error);
+            toast.error(error.response.data);
+        }
         setSubmitting(false);
     };
 

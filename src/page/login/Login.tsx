@@ -1,21 +1,39 @@
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import { Box, Button, TextField, Typography, Container } from '@mui/material';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import LoginImage from '../../resources/images/login.jpg';
+import { authedRequest } from '../../http';
+import toast from 'react-hot-toast';
+import { User, useAuth } from '../../contexts/Auth';
 const validationSchema = Yup.object({
     email: Yup.string().email('Invalid email address').required('Required'),
     password: Yup.string().required('Required'),
 });
 
 const LoginPage = () => {
+    const navigate = useNavigate();
+    const { login } = useAuth();
     const formik = useFormik({
         initialValues: {
             email: '',
             password: '',
         },
         validationSchema: validationSchema,
-        onSubmit: values => {
+        onSubmit: async values => {
+            try {
+                const result = await authedRequest.post(`/auth/login`, {
+                    email: values.email,
+                    password: values.password
+                });
+                toast.success('Successfully logged in!');
+                const { jwt, user } = result.data;
+                login(user as User, jwt);
+                navigate('/');
+            } catch (error:any) {
+                toast.error(error.response.data);
+                console.log(error);
+            }
         },
     });
 
